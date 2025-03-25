@@ -17,11 +17,13 @@ import (
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
 
 
-func getUsers() {
-
+func GetUsers() gin.HandlerFunc {
+	return func (c *gin.Context) {
+		c.IndentedJSON(http.StatusOK, gin.H{"he": "llo"})
+	}
 }
 
-func getUser() gin.HandlerFunc {
+func GetUser() gin.HandlerFunc {
 	return func (c *gin.Context) {
 		user_id := c.Param("id")
 
@@ -35,7 +37,7 @@ func getUser() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		err = userCollection.FindOne(ctx, bson.M{"user_id": user_id}).Decode(user)
+		err = userCollection.FindOne(ctx, bson.M{"user_id": user_id}).Decode(&user)
 		if err != nil {
 			c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
