@@ -25,8 +25,8 @@ func hashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func validatePassword(password string, userPassword string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(password), []byte(userPassword))
+func validatePassword(hashedPassword string, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	result := true
 	if err != nil {
 		result = false
@@ -113,15 +113,14 @@ func Login() gin.HandlerFunc {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Cannot find user"})
 			return
 		}
-
-		samePerson := validatePassword(*user.Password, *foundUser.Password)
+		samePerson := validatePassword(*foundUser.Password, *user.Password)
 
 		if !samePerson {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "wrong email or password"})
 			return
 		}
+		token, refreshToken, _ := helpers.GenerateAllTokens(*foundUser.Email, *foundUser.First_name, *foundUser.Last_name, *foundUser.User_type, foundUser.User_id)
 
-		token, refreshToken, _ := helpers.GenerateAllTokens(*user.Email, *user.First_name, *user.Last_name, *user.User_type, user.User_id)
 		helpers.UpdateAllTokens(token, refreshToken, foundUser.User_id)
 		userCollection.FindOne(ctx, bson.M{"user_id": foundUser.User_id}).Decode(&foundUser)
 
